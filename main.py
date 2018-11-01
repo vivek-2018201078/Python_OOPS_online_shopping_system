@@ -23,6 +23,8 @@ class Product:
         self.name = name
 
 class Customer(Cart):
+    history = []
+
     def __init__(self, customer_id, name, phone, email):
         Cart.__init__(self)
         self.email = email
@@ -85,19 +87,41 @@ class Customer(Cart):
         print("---------------------------------------------------------")
         print("Total Amount = ", self.total)
 
-    def buyProducts(self, customers):
+    def buyProducts(self, index):
         self.viewCart()
-
+        customer_list = open("customers.pickle", "rb")
+        customers = pickle.load(customer_list)
+        customer_list.close()
         confirm = input("Confirm Buy (y/n):")
         if confirm.lower() == "y":
+
             print("amount of ", self.total, "is paid")
+            cart_temp = [self.numberofproducts, self.product_ids, self.product_names, self.prices, self.quantities,
+                         self.total]
+            customers[index].history.append(cart_temp)
             Cart.__init__(self)
             customer_list = open("customers.pickle", "wb")
             pickle.dump(customers, customer_list)
             customer_list.close()
             print("Transaction done")
+
             return
 
+        else:
+            return
+
+    def viewPurchaseHistory(self, index):
+        customer_list = open("customers.pickle", "rb")
+        customers = pickle.load(customer_list)
+        customer_list.close()
+        print("************************Purchase History*******************************")
+        for cart in customers[index].history:
+            print("------------------------------------------------------------------")
+            for i in range(int(cart[0])):
+                print(cart[1][i], cart[2][i], cart[3][i], cart[4][i])
+            print("Total amount of this purchase:", cart[5])
+            print("------------------------------------------------------------------")
+        print("************************************************************************")
 
 
 
@@ -168,6 +192,7 @@ class Admin():
         pickle.dump(products, product_list)
         product_list.close()
         print("Product modified successfully")
+
 
 
 
@@ -296,7 +321,8 @@ def customerfunctions(index):
     print("3. Delete from cart")
     print("4. View Cart")
     print("5. Buy Products")
-    print("6. change user type")
+    print("6. View Purchase History")
+    print("7. change user type")
 
     customer_list = open("customers.pickle", "rb")
     customers = pickle.load(customer_list)
@@ -340,10 +366,14 @@ def customerfunctions(index):
             continue
 
         if choice == "5":
-            customer.buyProducts(customers)
+            customer.buyProducts(index)
             continue
 
         if choice == "6":
+            customer.viewPurchaseHistory(index)
+            continue
+
+        if choice == "7":
             print("switching user...")
             print("logging out....")
             return
@@ -353,43 +383,20 @@ def customerfunctions(index):
             continue
 
 
-
-
-
-
-
-
-
-
-
 def main():
     global product_itr
     global customer_itr
-    # products = []
-    # customers = []
-    # product_list = open("products.pickle", "rb")
-    # customer_list = open("customers.pickle", "wb")
-    # with open("products.txt", 'r') as fp:
-    #     for line in fp:
-    #         item = line.split()
-    #         products.append(Product(item[0], item[1], item[2], item[3], item[4], item[5]))
-    #     pickle.dump(products, product_list)
-    #     product_list.close()
-    #     product_itr = len(products) + 1
-    #
-    #
-    # with open("customers.txt", 'r') as fp:
-    #     for line in fp:
-    #         item = line.split()
-    #         customers.append(Customer(item[0], item[1], item[2], item[3]))
-    #     pickle.dump(customers, customer_list)
-    #     customer_list.close()
-    #     customer_itr = len(customers) + 1
 
     product_list = open("products.pickle", "rb")
     customer_list = open("customers.pickle", "rb")
     customers = pickle.load(customer_list)
-    product_itr = len(pickle.load(product_list)) + 1
+    products = pickle.load(product_list)
+    max_product_id = 0
+    for product in products:
+        if int(product.product_id) > max_product_id:
+            max_product_id = int(product.product_id)
+
+    product_itr = max_product_id + 1
     customer_itr = len(customers) + 1
     product_list.close()
     customer_list.close()
@@ -414,6 +421,8 @@ def main():
                 continue
             customerfunctions(index)
             continue
+        if user_type.lower() == "exit":
+            exit()
         else:
             print("wrong choice...type again")
             continue
