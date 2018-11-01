@@ -1,0 +1,3 @@
+1 galaxy_grand 10000 100 electronics mobile
+2 iphone 50000 100 electronics mobile
+3 charger 150 200 electronics accessories
