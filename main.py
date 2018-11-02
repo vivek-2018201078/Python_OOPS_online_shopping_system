@@ -23,7 +23,7 @@ class Product:
         self.name = name
 
 class Customer(Cart):
-    history = []
+    #history = []
 
     def __init__(self, customer_id, name, phone, email):
         Cart.__init__(self)
@@ -31,6 +31,7 @@ class Customer(Cart):
         self.phone = phone
         self.name = name
         self.customer_id = customer_id
+        self.history = []
 
     def viewProducts(self):
         print("---------------------------------------------------------")
@@ -387,10 +388,13 @@ def main():
     global product_itr
     global customer_itr
 
+
     product_list = open("products.pickle", "rb")
     customer_list = open("customers.pickle", "rb")
     customers = pickle.load(customer_list)
     products = pickle.load(product_list)
+
+
     max_product_id = 0
     for product in products:
         if int(product.product_id) > max_product_id:
