@@ -1,4 +1,6 @@
 import pickle
+import matplotlib.pyplot as plt
+import numpy as np
 
 product_itr = 0
 customer_itr = 0
@@ -95,16 +97,25 @@ class Customer(Cart):
         customer_list.close()
         confirm = input("Confirm Buy (y/n):")
         if confirm.lower() == "y":
-
+            if self.numberofproducts == 0:
+                print("Nothing in cart")
+                return
             print("amount of ", self.total, "is paid")
             cart_temp = [self.numberofproducts, self.product_ids, self.product_names, self.prices, self.quantities,
                          self.total]
             customers[index].history.append(cart_temp)
             Cart.__init__(self)
+            customers[index].numberofproducts = 0
+            customers[index].product_ids = []
+            customers[index].product_names = []
+            customers[index].prices = []
+            customers[index].quantities = []
+            customers[index].total = 0
             customer_list = open("customers.pickle", "wb")
             pickle.dump(customers, customer_list)
             customer_list.close()
             print("Transaction done")
+            print("product is shipped")
 
             return
 
@@ -194,6 +205,45 @@ class Admin():
         product_list.close()
         print("Product modified successfully")
 
+    def viewShipmentHistory(self):
+        customer_list = open("customers.pickle", "rb")
+        customers = pickle.load(customer_list)
+        customer_list.close()
+        print("*********************************Shipment History************************************")
+        for customer in customers:
+            if len(customer.history) == 0:
+                continue
+            print("++++++++++++++++Customer Name = ", customer.name, "+++++++++++++++++++++++")
+            for cart in customer.history:
+                print("------------------------------------------------------------------")
+                for i in range(int(cart[0])):
+                    print(cart[1][i], cart[2][i], cart[3][i], cart[4][i])
+                print("Total amount of this purchase:", cart[5])
+                print("------------------------------------------------------------------")
+            print("++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++")
+        print("*********************************Shipment History************************************")
+
+    def graph(self):
+        customer_list = open("customers.pickle", "rb")
+        customers = pickle.load(customer_list)
+        customer_list.close()
+        labels = []
+        values = []
+        for customer in customers:
+            if len(customer.history) == 0:
+                continue
+            labels.append(customer.name)
+            values.append(len(customer.history))
+
+        values = np.array(values)
+
+        def absolute_value(val):
+            a = np.round(val / 100. * values.sum(), 0)
+            return int(a)
+
+        plt.pie(values, labels=labels, autopct=absolute_value)
+        plt.title('User purchases on site thus far')
+        plt.show()
 
 
 
@@ -207,7 +257,10 @@ def admin_functions():
     print("2. Add Product")
     print("3. Delete Products")
     print("4. Modify Products")
-    print("5. Change user type")
+    print("5. View Customers")
+    print("6. View previous shipments")
+    print("7. Visualize users previous purchase")
+    print("8. Change user type")
     while(True):
         chosen = input("choice?:")
         if chosen == "1":
@@ -227,6 +280,19 @@ def admin_functions():
             id_to_del = input("Give product id to delete:")
             store_admin.deleteProduct(id_to_del)
             continue
+
+        if chosen == "5":
+            customer_list = open("customers.pickle", "rb")
+            customers = pickle.load(customer_list)
+            customer_list.close()
+            print("----------------------------------------------------")
+            print("id   name    phone.no    email   total_orders")
+            for customer in customers:
+                print(customer.customer_id, customer.name, customer.email, len(customer.history))
+            print("----------------------------------------------------")
+            continue
+
+
         if chosen == "4":
             id_to_modify = input("Give product id to modify:")
             index = store_admin.existsProduct(id_to_modify)
@@ -241,7 +307,15 @@ def admin_functions():
             store_admin.modifyProduct(index, Product(id_to_modify, item[0], item[1], item[2], item[3], item[4]))
             continue
 
-        if chosen == "5":
+        if chosen == "6":
+            store_admin.viewShipmentHistory()
+            continue
+
+        if chosen == "7":
+            store_admin.graph()
+            continue
+
+        if chosen == "8":
             print("switching user...")
             print("logging out...")
             return
